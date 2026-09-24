@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>JS Runtime & Async - Homework</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <h1>JavaScript Runtime & Async Practice</h1>
+      <p class="subtitle">Closures, Call Stack, Promises, Event Loop, Microtasks & Macrotasks</p>
+    </header>
+
+    <!-- Section 1: Tasks Dashboard -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Simulated Async Tasks</h2>
+        <div class="action-buttons">
+          <button id="runAllConcurrentBtn" class="btn btn-primary">Run All Tasks (Concurrent)</button>
+          <button id="resetAllBtn" class="btn btn-secondary">Reset All</button>
+        </div>
+      </div>
+
+      <div class="task-list" id="taskList">
+        <!-- Rendered dynamically by script.js -->
+      </div>
+
+      <div id="allFinishedBanner" class="banner hidden">
+        All tasks finished!
+      </div>
+    </section>
+
+    <!-- Section 2: Sequential vs Concurrent Comparison -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Sequential vs Concurrent Execution</h2>
+        <button id="compareBtn" class="btn btn-accent">Run Comparison</button>
+      </div>
+      <p class="section-desc">
+        Compares running <code>await task1.run(); await task2.run(); await task3.run();</code> sequentially 
+        versus concurrent execution with <code>Promise.allSettled</code>.
+      </p>
+
+      <div class="comparison-grid">
+        <div class="metric-box">
+          <span class="metric-title">Sequential Duration</span>
+          <span id="seqTime" class="metric-value">—</span>
+          <span class="metric-hint">Sum of individual times (T1 + T2 + T3)</span>
+        </div>
+        <div class="metric-box">
+          <span class="metric-title">Concurrent Duration</span>
+          <span id="concurTime" class="metric-value">—</span>
+          <span class="metric-hint">Roughly max individual time max(T1, T2, T3)</span>
+        </div>
+      </div>
+
+      <div id="comparisonLog" class="explanation-box hidden"></div>
+    </section>
+
+    <!-- Section 3: Event Loop Demo -->
+    <section class="card">
+      <div class="card-header">
+        <h2>Event Loop Demo (Call Stack &rarr; Microtask Queue &rarr; Task Queue)</h2>
+        <button id="runEventLoopBtn" class="btn btn-primary">Run Event Loop Demo</button>
+      </div>
+
+      <p class="section-desc">
+        Demonstrates the execution order of synchronous code, <code>setTimeout</code> (Macrotasks), 
+        <code>Promise.then</code> (Microtasks), and <code>async / await</code>.
+      </p>
+
+      <div class="code-preview">
+        <pre><code>// Demo Code:
+console.log('1. [Sync] Script start');
+
+setTimeout(() => {
+  console.log('2. [Task / Macrotask] setTimeout 1 (0ms)');
+}, 0);
+
+setTimeout(() => {
+  console.log('3. [Task / Macrotask] setTimeout 2 (50ms)');
+}, 50);
+
+Promise.resolve().then(() => {
+  console.log('4. [Microtask] Promise 1 resolved');
+}).then(() => {
+  console.log('5. [Microtask] Promise 2 chained');
+});
+
+async function asyncDemo() {
+  console.log('6. [Sync inside async] asyncDemo before await');
+  await null;
+  console.log('7. [Microtask] asyncDemo after await');
+}
+asyncDemo();
+
+console.log('8. [Sync] Script end');</code></pre>
+      </div>
+
+      <div class="event-loop-results">
+        <div class="log-column">
+          <h3>Predicted Output (Static Analysis)</h3>
+          <ol class="log-list predicted">
+            <li>1. [Sync] Script start</li>
+            <li>6. [Sync inside async] asyncDemo before await</li>
+            <li>8. [Sync] Script end</li>
+            <li>4. [Microtask] Promise 1 resolved</li>
+            <li>7. [Microtask] asyncDemo after await</li>
+            <li>5. [Microtask] Promise 2 chained</li>
+            <li>2. [Task / Macrotask] setTimeout 1 (0ms)</li>
+            <li>3. [Task / Macrotask] setTimeout 2 (50ms)</li>
+          </ol>
+        </div>
+
+        <div class="log-column">
+          <h3>Actual Console Output (Live Run)</h3>
+          <div id="actualOutput" class="terminal-box">
+            <span class="terminal-placeholder">Click "Run Event Loop Demo" to execute...</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="eventLoopExplanation" class="explanation-box hidden">
+        <h4>Execution Flow Explained:</h4>
+        <ol>
+          <li><strong>Call Stack (Synchronous):</strong> Logs <code>1</code>. Registers Timer 1 (0ms) and Timer 2 (50ms) with Browser Web APIs. Enqueues Promise 1 to the Microtask Queue. Calls <code>asyncDemo()</code>, logging <code>6</code> synchronously until <code>await null</code> yields and queues its continuation as a microtask. Finally logs <code>8</code>. Call stack is now empty.</li>
+          <li><strong>Microtask Queue (Priority Drain):</strong> Before picking any macrotasks, the Event Loop drains all microtasks completely: logs <code>4</code> (which chains Promise 2 into the microtask queue), then resumes async function logging <code>7</code>, then executes the chained promise logging <code>5</code>.</li>
+          <li><strong>Task Queue (Macrotasks):</strong> With microtasks drained, the Event Loop dequeues the first ready macrotask: Timer 1 executes, logging <code>2</code>. Later, Timer 2 (50ms) expires and is queued, then executed, logging <code>3</code>.</li>
+        </ol>
+      </div>
+    </section>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
